@@ -1,7 +1,8 @@
-#[macro_use]
-extern crate log;
 use bincode::serialize;
-use lachesis_rs::{BTreeHashgraph, EventHash, HashgraphWire, Node, Peer, PeerId, Swirlds};
+use event::EventHash;
+use hashgraph::{BTreeHashgraph, HashgraphWire};
+use node::Node;
+use peer::{Peer, PeerId};
 use ring::rand::SystemRandom;
 use ring::signature;
 use std::io::{Read, Write};
@@ -9,6 +10,7 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
 use std::thread::{sleep, spawn, JoinHandle};
 use std::time::Duration;
+use swirlds::Swirlds;
 
 fn create_node(rng: &mut SystemRandom) -> Swirlds<TcpNode, BTreeHashgraph> {
     let hashgraph = BTreeHashgraph::new();

@@ -88,7 +88,6 @@ pub fn get_peers(req: &HttpRequest) -> Box<Future<Item = HttpResponse, Error = E
 
     result(Ok(HttpResponse::Ok().json(peers))).responder()
 }
-lachesis-rs/.idea/misc.xml
 
 #[cfg(test)]
 mod tests {

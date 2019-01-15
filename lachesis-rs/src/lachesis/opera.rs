@@ -8,9 +8,12 @@ use std::iter::FromIterator;
 
 #[derive(Clone)]
 pub struct OperaEvent {
-    event: Event<ParentsList>,
+    clotho: bool,
+    pub event: Event<ParentsList>,
+    pub flag_table: HashSet<EventHash>,
+    frame: usize,
     lamport_timestamp: usize,
-    flag_table: HashSet<EventHash>,
+    pub root: bool,
 }
 
 pub struct Opera {
@@ -43,7 +46,12 @@ impl Opera {
         }
     }
 
-    pub fn insert(&mut self, hash: EventHash, event: Event<ParentsList>) -> Result<(), Error> {
+    pub fn insert(
+        &mut self,
+        hash: EventHash,
+        event: Event<ParentsList>,
+        frame: usize,
+    ) -> Result<(), Error> {
         self.lamport_timestamp += 1;
         let flag_table = match event.parents() {
             None => HashSet::with_capacity(0),
@@ -52,11 +60,52 @@ impl Opera {
         self.graph.insert(
             hash,
             OperaEvent {
+                clotho: true,
                 event,
                 flag_table,
+                frame,
                 lamport_timestamp: self.lamport_timestamp,
+                root: false,
             },
         );
+        Ok(())
+    }
+
+    pub fn unfamous_events(&self) -> Vec<&OperaEvent> {
+        self.graph.values().filter(|e| !e.root).collect()
+    }
+
+    pub fn set_root(&mut self, h: &EventHash) -> Result<(), Error> {
+        let mut e = self
+            .graph
+            .get_mut(h)
+            .ok_or(Error::from(HashgraphError::new(
+                HashgraphErrorType::EventNotFound,
+            )))?;
+        e.root = true;
+        e.flag_table = HashSet::new();
+        Ok(())
+    }
+
+    pub fn set_clotho(&mut self, h: &EventHash) -> Result<(), Error> {
+        let mut e = self
+            .graph
+            .get_mut(h)
+            .ok_or(Error::from(HashgraphError::new(
+                HashgraphErrorType::EventNotFound,
+            )))?;
+        e.clotho = true;
+        Ok(())
+    }
+
+    pub fn change_frame(&mut self, h: &EventHash, frame: usize) -> Result<(), Error> {
+        let mut e = self
+            .graph
+            .get_mut(h)
+            .ok_or(Error::from(HashgraphError::new(
+                HashgraphErrorType::EventNotFound,
+            )))?;
+        e.frame = frame;
         Ok(())
     }
 
@@ -70,7 +119,9 @@ impl Opera {
                     HashgraphErrorType::EventNotFound,
                 )))?
                 .clone();
-            ft.insert(p.clone());
+            if event.root {
+                ft.insert(p.clone());
+            }
             ft = ft.union(&event.flag_table).map(|e| e.clone()).collect();
         }
         Ok(ft)
@@ -92,6 +143,40 @@ impl Opera {
             graph: diff_keys,
             lamport_timestamp: self.lamport_timestamp,
         }
+    }
+
+    pub fn can_see(&self, seer: &EventHash, seen: &EventHash) -> Result<bool, Error> {
+        if seer == seen {
+            Ok(true)
+        } else {
+            let ancestors = self.get_ancestors(seer)?;
+            Ok(ancestors.contains(seen))
+        }
+    }
+
+    fn get_ancestors(&self, hash: &EventHash) -> Result<Vec<EventHash>, Error> {
+        let event = self
+            .graph
+            .get(hash)
+            .ok_or(Error::from(HashgraphError::new(
+                HashgraphErrorType::EventNotFound,
+            )))?
+            .clone();
+        let result = match event.event.parents() {
+            None => vec![],
+            Some(p) => {
+                let mut base = p.0.clone();
+                let mut prev =
+                    p.0.iter()
+                        .map(|ph| self.get_ancestors(ph).unwrap())
+                        .map(|v| v.into_iter())
+                        .flatten()
+                        .collect();
+                base.append(&mut prev);
+                base
+            }
+        };
+        Ok(result)
     }
 }
 

@@ -7,12 +7,27 @@ use bytes::BytesMut;
 use futures::{future::result, Future, Stream};
 use json::JsonValue;
 use serde_json::Value;
+use std::sync::Arc;
+use std::sync::Mutex;
+use crate::lachesis::Lachesis;
+use crate::lachesis::opera::Opera;
+use crate::peer;
+use ring::signature::{KeyPair, Ed25519KeyPair};
 
 pub struct HttpServer;
 
+pub struct State;
+
 impl HttpServer {
-    pub fn create_app() -> App {
-        App::new()
+    pub fn create_app() -> App<State> {
+
+//        // Generate a key pair in PKCS#8 (v2) format.
+//        let rng = rand::SystemRandom::new();
+//        let pkcs8_bytes = Ed25519KeyPair::generate_pkcs8(&rng).unwrap();
+//        let key_pair = Ed25519KeyPair::from_pkcs8(untrusted::Input::from(&pkcs8_bytes)).unwrap();
+//        let lachesis = Lachesis::new(32, key_pair);
+
+        App::with_state(State{})
             .middleware(middleware::Logger::default())
             .resource("/transaction", |r| {
                 r.method(http::Method::POST).a(submit_transaction)
@@ -24,12 +39,12 @@ impl HttpServer {
     }
 
     pub fn start() {
-        server::new(|| HttpServer::create_app())
+        server::new(move || HttpServer::create_app())
             .bind("127.0.0.1:8080")
             .unwrap()
             .shutdown_timeout(1)
             .start();
-        println!("Started http server: 127.0.0.1:8080");
+            println!("Started http server: 127.0.0.1:8080");
     }
 }
 
@@ -61,7 +76,7 @@ enum TransactionStatus {
     Failed,
 }
 
-pub fn submit_transaction(req: &HttpRequest) -> Box<Future<Item = HttpResponse, Error = Error>> {
+pub fn submit_transaction(req: &HttpRequest<State>) -> Box<Future<Item = HttpResponse, Error = Error>> {
     req.json()
         .from_err() // convert all errors into `Error`
         .and_then(|val: SubmitTransaction| {
@@ -72,7 +87,7 @@ pub fn submit_transaction(req: &HttpRequest) -> Box<Future<Item = HttpResponse, 
 }
 
 pub fn check_transaction_status(
-    req: &HttpRequest,
+    req: &HttpRequest<State>,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
     //TODO: implement get transaction status from id
     let transaction_id = req.match_info().get("id").expect("no id provided");
@@ -80,7 +95,7 @@ pub fn check_transaction_status(
     result(Ok(HttpResponse::Ok().json(TransactionStatus::Failed))).responder()
 }
 
-pub fn get_peers(req: &HttpRequest) -> Box<Future<Item = HttpResponse, Error = Error>> {
+pub fn get_peers(req: &HttpRequest<State>) -> Box<Future<Item = HttpResponse, Error = Error>> {
     //TODO: implement get list of peers
     let peers = vec![Peer {
         id: "wefwef".to_string(),

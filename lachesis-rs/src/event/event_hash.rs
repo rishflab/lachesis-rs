@@ -1,4 +1,4 @@
-#[derive(Clone, Debug, Deserialize, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+#[derive(Clone, Debug, Deserialize, Ord, Eq, Hash, PartialEq, PartialOrd, Serialize)]
 pub struct EventHash(pub Vec<u8>);
 
 impl AsRef<[u8]> for EventHash {

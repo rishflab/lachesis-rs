@@ -9,7 +9,7 @@ use std::iter::FromIterator;
 #[derive(Clone)]
 pub struct OperaEvent {
     clotho: bool,
-    pub event: Event<ParentsList>,
+    pub event: Event,
     pub flag_table: HashSet<EventHash>,
     frame: usize,
     lamport_timestamp: usize,
@@ -46,12 +46,7 @@ impl Opera {
         }
     }
 
-    pub fn insert(
-        &mut self,
-        hash: EventHash,
-        event: Event<ParentsList>,
-        frame: usize,
-    ) -> Result<(), Error> {
+    pub fn insert(&mut self, hash: EventHash, event: Event, frame: usize) -> Result<(), Error> {
         self.lamport_timestamp += 1;
         let flag_table = match event.parents() {
             None => HashSet::with_capacity(0),
@@ -79,9 +74,7 @@ impl Opera {
         let mut e = self
             .graph
             .get_mut(h)
-            .ok_or(Error::from(HashgraphError::new(
-                HashgraphErrorType::EventNotFound,
-            )))?;
+            .ok_or(HashgraphError::new(HashgraphErrorType::EventNotFound))?;
         e.root = true;
         e.flag_table = HashSet::new();
         Ok(())
@@ -91,9 +84,7 @@ impl Opera {
         let mut e = self
             .graph
             .get_mut(h)
-            .ok_or(Error::from(HashgraphError::new(
-                HashgraphErrorType::EventNotFound,
-            )))?;
+            .ok_or(HashgraphError::new(HashgraphErrorType::EventNotFound))?;
         e.clotho = true;
         Ok(())
     }
@@ -102,9 +93,7 @@ impl Opera {
         let mut e = self
             .graph
             .get_mut(h)
-            .ok_or(Error::from(HashgraphError::new(
-                HashgraphErrorType::EventNotFound,
-            )))?;
+            .ok_or(HashgraphError::new(HashgraphErrorType::EventNotFound))?;
         e.frame = frame;
         Ok(())
     }
@@ -115,9 +104,7 @@ impl Opera {
             let event = self
                 .graph
                 .get(p)
-                .ok_or(Error::from(HashgraphError::new(
-                    HashgraphErrorType::EventNotFound,
-                )))?
+                .ok_or(HashgraphError::new(HashgraphErrorType::EventNotFound))?
                 .clone();
             if event.root {
                 ft.insert(p.clone());
@@ -158,9 +145,7 @@ impl Opera {
         let event = self
             .graph
             .get(hash)
-            .ok_or(Error::from(HashgraphError::new(
-                HashgraphErrorType::EventNotFound,
-            )))?
+            .ok_or(HashgraphError::new(HashgraphErrorType::EventNotFound))?
             .clone();
         let result = match event.event.parents() {
             None => vec![],

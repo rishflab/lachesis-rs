@@ -7,3 +7,4 @@ Cargo.lock
 *.patch
 *~
 *.bak
+.DS_Store

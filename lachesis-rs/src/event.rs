@@ -3,7 +3,6 @@ use crate::peer::PeerId;
 use bincode::serialize;
 use failure::Error;
 use ring::digest::{digest, SHA256};
-use serde::Serialize;
 use std::collections::HashMap;
 
 pub mod event_hash;
@@ -12,16 +11,16 @@ pub mod parents;
 
 use self::event_hash::EventHash;
 use self::event_signature::EventSignature;
-use self::parents::Parents;
+use crate::lachesis::parents_list::ParentsList;
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct Event<P: Parents + Clone + Serialize> {
+pub struct Event {
     #[serde(skip)]
     can_see: HashMap<PeerId, EventHash>,
     #[serde(skip)]
     famous: Option<bool>,
     payload: Vec<Vec<u8>>,
-    parents: Option<P>,
+    parents: Option<ParentsList>,
     timestamp: Option<u64>,
     creator: PeerId,
     signature: Option<EventSignature>,
@@ -31,8 +30,8 @@ pub struct Event<P: Parents + Clone + Serialize> {
     round_received: Option<usize>,
 }
 
-impl<P: Parents + Clone + Serialize> Event<P> {
-    pub fn new(payload: Vec<Vec<u8>>, parents: Option<P>, creator: PeerId) -> Event<P> {
+impl Event {
+    pub fn new(payload: Vec<Vec<u8>>, parents: Option<ParentsList>, creator: PeerId) -> Event {
         Event {
             can_see: HashMap::new(),
             creator,
@@ -141,7 +140,7 @@ impl<P: Parents + Clone + Serialize> Event<P> {
     }
 
     #[inline]
-    pub fn parents(&self) -> &Option<P> {
+    pub fn parents(&self) -> &Option<ParentsList> {
         &self.parents
     }
 

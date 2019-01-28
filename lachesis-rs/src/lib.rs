@@ -6,7 +6,6 @@ extern crate log;
 extern crate proptest;
 #[macro_use]
 extern crate serde_derive;
-extern crate json;
 
 macro_rules! get_from_mutex {
     ($resource: expr, $error: ident) => {
@@ -25,6 +24,8 @@ mod round;
 mod server;
 mod swirlds;
 pub mod tcp_server;
+pub mod config;
+
 
 pub use crate::event::{event_hash::EventHash, Event};
 pub use crate::hashgraph::{BTreeHashgraph, Hashgraph, HashgraphWire};

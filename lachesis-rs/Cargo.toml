@@ -26,3 +26,5 @@ serde = "1.0.80"
 serde_derive = "1.0.80"
 futures = "*"
 json = "*"
+ethkey = {git = "https://github.com/paritytech/parity-ethereum.git"}
+toml = "*"

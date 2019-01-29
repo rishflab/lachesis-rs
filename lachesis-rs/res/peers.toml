@@ -1,0 +1,11 @@
+[[peers]]
+address = "0x8Db4BeF6c76Fa24cb18A849d156d8bAd020CCF17"
+socket = "127.0.0.1:8080"
+
+[[peers]]
+address = "0x8e29FCa356a78abD1ba2BC536af56005f1E8b4F1"
+socket = "127.0.0.1:8081"
+
+[[peers]]
+address = "0x0B6Cf0Bbf9beB19ce0dEF13F8e8c05B2a955B3Bc"
+socket = "127.0.0.1:8082"

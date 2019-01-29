@@ -28,3 +28,4 @@ futures = "*"
 json = "*"
 ethkey = {git = "https://github.com/paritytech/parity-ethereum.git"}
 toml = "*"
+hex = "*"
